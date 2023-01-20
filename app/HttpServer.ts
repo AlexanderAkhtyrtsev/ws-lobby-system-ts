@@ -1,11 +1,9 @@
-import express, { Express, Request, Response } from 'express';
+import express, { Express } from 'express';
 import dotenv from 'dotenv';
+import http from "http";
 
 dotenv.config();
 
 export const app: Express = express();
 
-app.get('/', (req: Request, res: Response) => {
-    res.send('Hello World');
-});
-
+export const server = http.createServer(app);
