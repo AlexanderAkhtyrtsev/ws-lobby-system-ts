@@ -22,7 +22,7 @@ export default class Lobby {
         return this.limit === this.participants.length;
     }
 
-    public participantList() {
-        return [...this.participants];
+    public participantList(exceptions: WebSocket[] = []) {
+        return this.participants.filter( p => !exceptions.includes(p) )
     }
 }
