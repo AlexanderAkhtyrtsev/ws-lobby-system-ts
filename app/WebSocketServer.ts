@@ -1,6 +1,6 @@
 import * as WebSocket from 'ws';
 import {server, app} from "./HttpServer";
-import Lobby from "./Lobby";
+import Lobby, {LobbyEvents} from "./Lobby";
 
 
 const lobbies: Set<Lobby> = new Set<Lobby>();
@@ -25,13 +25,22 @@ app.get('/ws', () => {
         // Join lobby
         lobby.add(ws);
 
-        console.log(`${request.socket.remoteAddress} joined lobby #${lobby.id}`)
+        lobby.notify(LobbyEvents.ParticipantConnected, [ws]);
+
+        console.log(`${request.socket.remoteAddress} joined lobby #${lobby.id}`);
 
         ws.on('message', (message: string) => {
             console.log(request.socket.remoteAddress + ' said: ' + message)
-            if (lobby) {
-                lobby.participantList([ws]).forEach(p => p.send(message.toString()))
-            }
+
+            if (lobby)
+                lobby.participantList([ws])
+                    .forEach(p => {
+                        p.send(JSON.stringify({
+                            type: 'message',
+                            payload: message.toString()
+                        }))
+                    })
+
         });
 
         ws.on('close', () => {

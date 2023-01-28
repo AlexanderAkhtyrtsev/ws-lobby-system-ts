@@ -1,5 +1,9 @@
 import {WebSocket} from "ws";
 
+export enum LobbyEvents {
+    ParticipantConnected= 'participant.connected'
+}
+
 export default class Lobby {
     static id = 0;
 
@@ -24,5 +28,11 @@ export default class Lobby {
 
     public participantList(exceptions: WebSocket[] = []) {
         return this.participants.filter( p => !exceptions.includes(p) )
+    }
+
+    notify(message: string, exceptions: WebSocket[] = []) {
+        this.participantList(exceptions).forEach(p => {
+            p.send(JSON.stringify({ type: 'notification', payload: message }))
+        })
     }
 }
