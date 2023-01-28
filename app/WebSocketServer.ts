@@ -3,10 +3,10 @@ import {server, app} from "./HttpServer";
 import Lobby from "./Lobby";
 
 
-const lobbies: Lobby[] = [];
+const lobbies: Set<Lobby> = new Set<Lobby>();
 
 function findLobby() {
-    return lobbies.find(l => !l.isFull);
+    return [...Array.from(lobbies)].find(l => !l.isFull);
 }
 
 
@@ -18,7 +18,7 @@ app.get('/ws', () => {
 
         if (lobby === undefined) {
             lobby = new Lobby()
-            lobbies.push( lobby )
+            lobbies.add( lobby )
             console.log(`Lobby #${lobby.id} created`)
         }
 
@@ -35,8 +35,16 @@ app.get('/ws', () => {
         });
 
         ws.on('close', () => {
-            if (lobby) lobby.remove(ws);
-            console.log('disconnected ' + request.socket.remoteAddress)
+            if (lobby) {
+                lobby.remove(ws);
+
+                if (!lobby.participantList().length) {
+                    lobbies.delete(lobby);
+                    console.log('Lobby #' + lobby.id + ' closed.')
+                }
+            }
+
+            console.log('disconnected ' + request.socket.remoteAddress);
         });
     })
 })
