@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "npx tsc api",
+    "build": "npx tsc --outDir api",
     "start": "node api/index.js",
     "watch": "concurrently \"npx tsc --watch\" \"nodemon -q api/index.js\""
   },
