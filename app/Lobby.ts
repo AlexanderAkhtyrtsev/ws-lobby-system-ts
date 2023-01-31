@@ -1,4 +1,5 @@
 import {WebSocket} from "ws";
+import {createPackage, PackageTypes} from "./WebsocketPackage";
 
 export enum LobbyEvents {
     ParticipantConnected= 'participant.connected'
@@ -32,7 +33,9 @@ export default class Lobby {
 
     notify(message: string, exceptions: WebSocket[] = []) {
         this.participantList(exceptions).forEach(p => {
-            p.send(JSON.stringify({ type: 'notification', payload: message }))
+            p.send(JSON.stringify(
+                createPackage(PackageTypes.Notification, message)
+            ))
         })
     }
 }

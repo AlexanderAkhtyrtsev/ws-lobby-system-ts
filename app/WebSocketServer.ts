@@ -1,6 +1,7 @@
 import * as WebSocket from 'ws';
-import {server, app} from "./HttpServer";
+import {app, server} from "./HttpServer";
 import Lobby, {LobbyEvents} from "./Lobby";
+import {createPackage, PackageTypes} from "./WebsocketPackage";
 
 
 const lobbies: Set<Lobby> = new Set<Lobby>();
@@ -32,14 +33,13 @@ app.get('/ws', () => {
         ws.on('message', (message: string) => {
             console.log(request.socket.remoteAddress + ' said: ' + message)
 
-            if (lobby)
-                lobby.participantList([ws])
-                    .forEach(p => {
-                        p.send(JSON.stringify({
-                            type: 'message',
-                            payload: message.toString()
-                        }))
-                    })
+            lobby &&
+            lobby.participantList().forEach(p => {
+                p.send(JSON.stringify(createPackage(
+                    PackageTypes.Message,
+                    message.toString()
+                )))
+            })
 
         });
 
