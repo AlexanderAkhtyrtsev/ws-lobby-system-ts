@@ -3,24 +3,17 @@ import {app, server} from "./HttpServer";
 import Lobby, {LobbyEvents} from "./Lobby";
 import {createPackage, PackageTypes} from "./WebsocketPackage";
 
+app.get('/ws/:id', ( req, res ) => {
+    const { id } = req.params;
 
-const lobbies: Set<Lobby> = new Set<Lobby>();
-
-function findLobby() {
-    return [...Array.from(lobbies)].find(l => !l.isFull);
-}
-
-
-app.get('/ws', () => {
     const wss = new WebSocket.Server({ server });
 
     wss.on('connection', (ws: WebSocket, request) => {
-        let lobby = findLobby();
+        const lobby = Lobby.findById(id);
 
         if (lobby === undefined) {
-            lobby = new Lobby()
-            lobbies.add( lobby )
-            console.log(`Lobby #${lobby.id} created`)
+            ws.close(404);
+            return;
         }
 
         // Join lobby
@@ -33,29 +26,23 @@ app.get('/ws', () => {
         ws.on('message', (message: string) => {
             console.log(request.socket.remoteAddress + ' said: ' + message)
 
-            lobby &&
             lobby.participantList().forEach(p => {
                 p.send(JSON.stringify(createPackage(
                     PackageTypes.Message,
                     message.toString()
                 )))
             })
-
         });
 
         ws.on('close', () => {
-            if (lobby) {
-                lobby.remove(ws);
+            lobby.remove(ws);
 
-                if (!lobby.participantList().length) {
-                    lobbies.delete(lobby);
-                    console.log('Lobby #' + lobby.id + ' closed.')
-                }
+            if (!lobby.participantList().length) {
+                lobby.destroy();
+                console.log('Lobby #' + lobby.id + ' closed.')
             }
 
             console.log('disconnected ' + request.socket.remoteAddress);
         });
     })
-})
-
-
+});

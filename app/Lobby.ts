@@ -5,12 +5,29 @@ export enum LobbyEvents {
     ParticipantConnected= 'participant.connected'
 }
 
+export const lobbies: Set<Lobby> = new Set<Lobby>();
+
 export default class Lobby {
     static id = 0;
 
     private participants: WebSocket[] = [];
     public readonly id = ++Lobby.id;
-    constructor(public readonly limit = 2) {}
+
+    constructor(
+        public readonly limit = 2,
+        public config: unknown = {}
+    ) {
+        lobbies.add(this);
+    }
+
+    static findById(id: string): Lobby | undefined {
+        return [...Array.from(lobbies)].find( lobby => lobby.id.toString() === id)
+    }
+
+    public destroy() {
+        lobbies.delete(this);
+        // TODO: close all sockets
+    }
 
     add(participant: WebSocket) {
         if (this.isFull)
