@@ -26,7 +26,7 @@ export default class Lobby {
 
     public destroy() {
         lobbies.delete(this);
-        // TODO: close all sockets
+        this.participants.forEach( p => p.close() );
     }
 
     add(participant: WebSocket) {
